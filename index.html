@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>云服务器 · 套餐选购</title>
+<style>
+  :root{
+    --bg:#070b15;
+    --card:#101a2e;
+    --line:#22314f;
+    --accent:#3b82f6;
+    --accent2:#22d3ee;
+    --text:#e6edf9;
+    --muted:#8fa1c0;
+    --gold:#ffc861;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    min-height:100vh;
+    font-family:"Microsoft YaHei","PingFang SC","Helvetica Neue",Arial,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(59,130,246,.22), transparent 60%),
+      radial-gradient(800px 500px at 90% 0%, rgba(34,211,238,.16), transparent 60%),
+      var(--bg);
+    padding:28px 16px 70px;
+  }
+  .wrap{max-width:980px;margin:0 auto;}
+
+  /* ============ 页面切换 ============ */
+  .page{display:none;}
+  .page.active{display:block;animation:fadeUp .35s ease both;}
+  @keyframes fadeUp{
+    from{opacity:0;transform:translateY(14px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  /* ============ 头部 ============ */
+  .header{text-align:center;margin-bottom:28px;}
+  .header h1{
+    font-size:28px;letter-spacing:1px;
+    background:linear-gradient(90deg,#7dd3fc,#3b82f6,#22d3ee);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .header p{margin-top:10px;color:var(--muted);font-size:14px;}
+
+  /* ============ 套餐卡片 ============ */
+  .grid{
+    display:grid;gap:18px;
+    grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+  }
+  .card{
+    position:relative;overflow:hidden;
+    background:linear-gradient(160deg,#131e34,#0d1526);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:22px 20px 18px;
+    cursor:pointer;
+    transition:transform .22s,border-color .22s,box-shadow .22s;
+  }
+  .card:hover{
+    transform:translateY(-4px);
+    border-color:#2f6bff;
+    box-shadow:0 12px 32px rgba(47,107,255,.22);
+  }
+  .card.selected{
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(59,130,246,.35),0 14px 34px rgba(59,130,246,.28);
+  }
+  .card.selected::after{
+    content:"已选择";
+    position:absolute;top:0;right:0;
+    background:linear-gradient(135deg,#3b82f6,#22d3ee);
+    color:#03121f;font-size:12px;font-weight:700;
+    padding:5px 12px;border-bottom-left-radius:12px;
+  }
+  .plan-name{font-size:16px;font-weight:700;margin-bottom:14px;}
+  .plan-price{
+    font-size:34px;font-weight:800;line-height:1;
+    background:linear-gradient(90deg,#ffd88a,#ffb43f);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    margin-bottom:18px;
+  }
+  .plan-price span{font-size:16px;margin-right:2px;}
+  .spec{list-style:none;}
+  .spec li{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:13px;color:var(--muted);
+    padding:9px 0;border-top:1px dashed rgba(255,255,255,.07);
+  }
+  .spec li b{color:var(--text);font-weight:600;}
+  .spec li:first-child{border-top:none;}
+
+  /* ============ 底部购买栏 ============ */
+  .bar{
+    margin-top:26px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    background:rgba(16,26,46,.85);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px 20px;
+    backdrop-filter:blur(6px);
+  }
+  .bar-info{font-size:14px;color:var(--muted);}
+  .bar-info span{color:var(--accent2);font-weight:700;}
+
+  /* ============ 按钮 ============ */
+  .btn{
+    font-family:inherit;font-size:15px;font-weight:700;
+    color:#04121f;border:none;border-radius:12px;
+    padding:13px 30px;cursor:pointer;
+    background:linear-gradient(135deg,#3b82f6,#22d3ee);
+    transition:.2s;
+  }
+  .btn:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px);}
+  .btn:active:not(:disabled){transform:translateY(0);}
+  .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn.ghost{
+    background:transparent;color:var(--muted);
+    border:1px solid var(--line);font-weight:600;
+    padding:10px 18px;font-size:13px;
+  }
+  .btn.ghost:hover{color:var(--text);border-color:#2f6bff;filter:none;}
+
+  /* ============ 支付页 ============ */
+  .back{
+    background:none;border:none;color:var(--muted);font-size:14px;
+    cursor:pointer;font-family:inherit;padding:6px 0;margin-bottom:14px;
+    transition:.2s;
+  }
+  .back:hover{color:var(--accent2);}
+
+  .panel{
+    background:linear-gradient(160deg,#111c31,#0b1322);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:26px 24px 28px;
+  }
+  .panel h2{font-size:19px;margin-bottom:20px;}
+
+  .order{
+    border:1px solid var(--line);border-radius:14px;
+    padding:6px 16px;background:rgba(6,12,24,.5);
+  }
+  .row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:13px 0;font-size:14px;color:var(--muted);
+    border-bottom:1px dashed rgba(255,255,255,.07);
+  }
+  .row:last-child{border-bottom:none;}
+  .row b{color:var(--text);font-weight:600;}
+  .row.total b{
+    font-size:24px;font-weight:800;
+    background:linear-gradient(90deg,#ffd88a,#ffb43f);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  .tip{
+    margin-top:20px;
+    font-size:13.5px;line-height:1.9;color:var(--muted);
+    background:rgba(59,130,246,.08);
+    border:1px solid rgba(59,130,246,.28);
+    border-left:3px solid var(--accent);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .tip .qq{
+    color:var(--accent2);font-weight:800;font-size:15px;
+    letter-spacing:.5px;
+  }
+  .tip-actions{margin-top:12px;}
+
+  .verify{margin-top:24px;}
+  .verify label{
+    display:block;font-size:14px;color:var(--muted);margin-bottom:10px;
+  }
+  input[type="text"]{
+    width:100%;font-family:inherit;font-size:15px;
+    color:var(--text);
+    background:#080e1b;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;outline:none;
+    transition:.2s;
+  }
+  input[type="text"]::placeholder{color:#5b6c8a;}
+  input[type="text"]:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(59,130,246,.18);
+  }
+  input[type="text"]:disabled{opacity:.55;cursor:not-allowed;}
+  .verify .btn{width:100%;margin-top:14px;padding:15px;}
+
+  .result{margin-top:16px;font-size:14px;display:none;}
+  .result.show{display:block;animation:fadeUp .3s ease both;}
+  .result.ok{
+    color:#4ade80;
+    background:rgba(74,222,128,.08);
+    border:1px solid rgba(74,222,128,.3);
+    border-radius:12px;padding:14px 16px;line-height:1.8;
+  }
+  .result.err{
+    color:#f87171;
+    background:rgba(248,113,113,.08);
+    border:1px solid rgba(248,113,113,.3);
+    border-radius:12px;padding:14px 16px;
+  }
+  .shake{animation:shake .4s;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-7px);}
+    40%{transform:translateX(7px);}
+    60%{transform:translateX(-5px);}
+    80%{transform:translateX(5px);}
+  }
+
+  /* ============ 弹出提示 ============ */
+  #toastBox{
+    position:fixed;top:24px;left:50%;transform:translateX(-50%);
+    z-index:999;display:flex;flex-direction:column;gap:10px;align-items:center;
+    pointer-events:none;
+  }
+  .toast{
+    min-width:150px;text-align:center;
+    padding:12px 26px;border-radius:12px;
+    font-size:14px;font-weight:700;
+    color:#fff;
+    background:linear-gradient(135deg,#ef4444,#b91c1c);
+    box-shadow:0 12px 30px rgba(239,68,68,.35);
+    opacity:0;transform:translateY(-14px);
+    transition:.3s;
+  }
+  .toast.ok{
+    background:linear-gradient(135deg,#22c55e,#15803d);
+    box-shadow:0 12px 30px rgba(34,197,94,.35);
+  }
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  @media (max-width:560px){
+    .header h1{font-size:22px;}
+    .bar{flex-direction:column;align-items:stretch;}
+    .bar .btn{width:100%;}
+    .panel{padding:20px 16px 22px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ================= 页面一：套餐选择 ================= -->
+  <section class="page active" id="pageShop">
+    <div class="header">
+      <h1>云服务器 · 套餐选购</h1>
+      <p>高性能云服务器 · 即买即用 · 卡密验证自助开通</p>
+    </div>
+
+    <div class="grid" id="planGrid"></div>
+
+    <div class="bar">
+      <div class="bar-info">已选套餐：<span id="selName">未选择</span></div>
+      <button class="btn" id="btnBuy" disabled>立即购买</button>
+    </div>
+  </section>
+
+  <!-- ================= 页面二：付款 / 卡密验证 ================= -->
+  <section class="page" id="pagePay">
+    <button class="back" id="btnBack">← 返回选择套餐</button>
+
+    <div class="panel">
+      <h2>订单确认</h2>
+
+      <div class="order">
+        <div class="row"><span>套餐名称</span><b id="payName">—</b></div>
+        <div class="row"><span>有效期</span><b id="payDays">—</b></div>
+        <div class="row"><span>流量</span><b id="payGb">—</b></div>
+        <div class="row total"><span>应付金额</span><b id="payPrice">—</b></div>
+      </div>
+
+      <div class="tip">
+        卡密购买请联系 QQ：<span class="qq">3272296045</span><br>
+        添加好友后付款，卖家会把卡密发给你，<br>
+        将卡密填入下方输入框，点击「完成验证」即可开通服务器。
+        <div class="tip-actions">
+          <button class="btn ghost" id="btnCopy">复制 QQ 号</button>
+        </div>
+      </div>
+
+      <div class="verify">
+        <label for="kamiInput">请输入卡密</label>
+        <input type="text" id="kamiInput" placeholder="请输入卖家发给你的卡密" autocomplete="off" spellcheck="false">
+        <button class="btn" id="btnVerify">完成验证</button>
+      </div>
+
+      <div class="result" id="result"></div>
+    </div>
+  </section>
+
+</div>
+
+<div id="toastBox"></div>
+
+<script>
+/* ===================== 1. 随机生成套餐 ===================== */
+const planConfig = [
+  { name:'入门型', price:40,  days:[30, 60],        gb:[100, 200] },
+  { name:'基础型', price:50,  days:[60, 90],        gb:[200, 300, 500] },
+  { name:'进阶型', price:60,  days:[90, 180],       gb:[500, 800] },
+  { name:'旗舰型', price:100, days:[180, 365],      gb:[1000, 2000] }
+];
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+const plans = planConfig.map(c => ({
+  name : c.name,
+  price: c.price,
+  days : pick(c.days),
+  gb   : pick(c.gb)
+}));
+
+/* ===================== 2. 渲染套餐卡片 ===================== */
+const grid      = document.getElementById('planGrid');
+const btnBuy    = document.getElementById('btnBuy');
+const selName   = document.getElementById('selName');
+const pageShop  = document.getElementById('pageShop');
+const pagePay   = document.getElementById('pagePay');
+
+let selectedIndex = -1;
+
+plans.forEach((p, i) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="plan-name">${p.name}</div>
+    <div class="plan-price"><span>¥</span>${p.price}</div>
+    <ul class="spec">
+      <li><span>有效期</span><b>${p.days} 天</b></li>
+      <li><span>流量</span><b>${p.gb} GB</b></li>
+      <li><span>线路</span><b>独享带宽</b></li>
+    </ul>
+  `;
+  card.addEventListener('click', () => selectPlan(i, card));
+  grid.appendChild(card);
+});
+
+function selectPlan(i, card){
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedIndex = i;
+  selName.textContent = plans[i].name + ' · ¥' + plans[i].price;
+  btnBuy.disabled = false;
+}
+
+/* ===================== 3. 跳转到付款页 ===================== */
+btnBuy.addEventListener('click', () => {
+  if (selectedIndex < 0) return;
+  const p = plans[selectedIndex];
+
+  document.getElementById('payName').textContent  = p.name;
+  document.getElementById('payDays').textContent  = p.days + ' 天';
+  document.getElementById('payGb').textContent    = p.gb + ' GB';
+  document.getElementById('payPrice').textContent = '¥' + p.price;
+
+  // 重置验证区状态
+  const input = document.getElementById('kamiInput');
+  input.value = '';
+  input.disabled = false;
+  document.getElementById('btnVerify').disabled = false;
+  const res = document.getElementById('result');
+  res.className = 'result';
+  res.textContent = '';
+
+  showPage(pagePay);
+  window.scrollTo({ top:0, behavior:'smooth' });
+});
+
+document.getElementById('btnBack').addEventListener('click', () => {
+  showPage(pageShop);
+  window.scrollTo({ top:0, behavior:'smooth' });
+});
+
+function showPage(page){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  page.classList.add('active');
+}
+
+/* ===================== 4. 复制 QQ ===================== */
+document.getElementById('btnCopy').addEventListener('click', () => {
+  const qq = '3272296045';
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(qq)
+      .then(() => toast('QQ 号已复制：' + qq, true))
+      .catch(() => toast('复制失败，请手动复制：' + qq));
+  } else {
+    toast('请手动复制 QQ：' + qq);
+  }
+});
+
+/* ===================== 5. 卡密验证 ===================== */
+const CORRECT_KAMI = 'jjbao7878';   // 正确卡密
+
+const kamiInput = document.getElementById('kamiInput');
+const btnVerify = document.getElementById('btnVerify');
+const resultBox = document.getElementById('result');
+
+btnVerify.addEventListener('click', doVerify);
+kamiInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doVerify();
+});
+
+function doVerify(){
+  const val = kamiInput.value.trim();
+
+  // 未输入 或 卡密错误 → 验证失败
+  if (val === '' || val !== CORRECT_KAMI){
+    toast('验证失败');
+    resultBox.className = 'result err show';
+    resultBox.textContent = val === ''
+      ? '✖ 验证失败：请输入卡密后再点击验证。'
+      : '✖ 验证失败：卡密错误，请检查后重新输入。';
+
+    kamiInput.classList.add('shake');
+    setTimeout(() => kamiInput.classList.remove('shake'), 420);
+    return;
+  }
+
+  // 验证成功
+  const p = plans[selectedIndex];
+  toast('验证成功', true);
+  resultBox.className = 'result ok show';
+  resultBox.innerHTML = `✔ 验证成功！<br>套餐：${p.name}（${p.days} 天 / ${p.gb} GB）<br>金额：¥${p.price}　服务器正在开通中，请联系 QQ 3272296045 获取登录信息。`;
+
+  kamiInput.disabled = true;
+  btnVerify.disabled = true;
+}
+
+/* ===================== 6. 弹出提示 ===================== */
+function toast(msg, ok){
+  const box = document.getElementById('toastBox');
+  const el  = document.createElement('div');
+  el.className = 'toast' + (ok ? ' ok' : '');
+  el.textContent = msg;
+  box.appendChild(el);
+
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 320);
+  }, 1800);
+}
+</script>
+</body>
+</html>
